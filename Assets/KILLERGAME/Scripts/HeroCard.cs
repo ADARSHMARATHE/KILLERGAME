@@ -34,8 +34,10 @@ namespace KillerGame
             {
                 iconImage.sprite             = sprite;
                 iconImage.preserveAspect     = true;
+                iconImage.type               = Image.Type.Simple;
                 iconImage.gameObject.SetActive(true);
                 if (iconText) iconText.gameObject.SetActive(false);
+                WOSVisualBootstrap.FixIconLayoutPublic(iconImage.transform);
             }
             else if (iconText)
             {
@@ -44,6 +46,11 @@ namespace KillerGame
             }
             if (nameText) nameText.text = def.name;
             if (descText) descText.text = def.desc;
+
+            WOSVisualBootstrap.StyleCard(gameObject,
+                new Color(0.62f, 0.28f, 0.88f),
+                new Color(0.48f, 0.16f, 0.68f),
+                "UpgradeBtn");
 
             Refresh();
             upgradeBtn?.onClick.AddListener(() => _gm.UpgradeHero(_def.key));

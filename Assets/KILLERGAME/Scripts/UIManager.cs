@@ -103,6 +103,9 @@ namespace KillerGame
 
         void Start()
         {
+            if (FindObjectOfType<WOSVisualBootstrap>() == null)
+                new GameObject("WOSVisualBootstrap").AddComponent<WOSVisualBootstrap>();
+
             _gm = KillerGameManager.Instance;
             _gm.OnStateChanged.AddListener(Refresh);
             _gm.OnEvent.AddListener(ShowEvent);

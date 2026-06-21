@@ -32,6 +32,11 @@ namespace KillerGame
             if (iconText) iconText.text = def.icon;
             if (nameText) nameText.text = def.name;
 
+            WOSVisualBootstrap.StyleCard(gameObject,
+                new Color(0.12f, 0.65f, 0.68f),
+                new Color(0.15f, 0.58f, 0.26f),
+                "TrainBtn");
+
             Refresh();
             trainBtn?.onClick.AddListener(() => _gm.TrainTroop(_def.key));
         }
