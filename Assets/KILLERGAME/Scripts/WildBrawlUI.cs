@@ -29,14 +29,17 @@ namespace KillerGame
 
         void Awake()
         {
-            BuildModal();
-            _root.SetActive(false);
+            TryBuildModal();
+            if (_root != null) _root.SetActive(false);
         }
 
         void Start()
         {
+            if (_root == null) TryBuildModal();
+            if (_root == null) { Debug.LogWarning("WildBrawlUI: no Canvas found — modal disabled."); return; }
+
             _gm = KillerGameManager.Instance;
-            if (_gm == null) return;
+            if (_gm == null) { Debug.LogWarning("WildBrawlUI: KillerGameManager not found."); return; }
 
             _gm.OnWildBrawlStarted.AddListener(Show);
             _gm.OnStateChanged.AddListener(OnStateChanged);
@@ -60,6 +63,7 @@ namespace KillerGame
 
         void Show()
         {
+            if (_root == null) return;
             _result.text = "";
             _result.gameObject.SetActive(false);
             _fightBtn.gameObject.SetActive(true);
@@ -101,9 +105,15 @@ namespace KillerGame
 
         public void Hide() => _root?.SetActive(false);
 
+        void TryBuildModal()
+        {
+            if (_root != null) return;
+            BuildModal();
+        }
+
         void BuildModal()
         {
-            var canvas = FindObjectOfType<Canvas>();
+            var canvas = Object.FindAnyObjectByType<Canvas>();
             if (canvas == null) return;
 
             _root = new GameObject("WildBrawlModal");

@@ -103,13 +103,18 @@ namespace KillerGame
 
         void Start()
         {
-            if (FindObjectOfType<WOSVisualBootstrap>() == null)
+            if (Object.FindAnyObjectByType<WOSVisualBootstrap>() == null)
                 new GameObject("WOSVisualBootstrap").AddComponent<WOSVisualBootstrap>();
 
-            if (FindObjectOfType<WildBrawlUI>() == null)
+            if (Object.FindAnyObjectByType<WildBrawlUI>() == null)
                 new GameObject("WildBrawlUI").AddComponent<WildBrawlUI>();
 
             _gm = KillerGameManager.Instance;
+            if (_gm == null)
+            {
+                Debug.LogError("UIManager: KillerGameManager.Instance is null.");
+                return;
+            }
             _gm.OnStateChanged.AddListener(Refresh);
             _gm.OnEvent.AddListener(ShowEvent);
 

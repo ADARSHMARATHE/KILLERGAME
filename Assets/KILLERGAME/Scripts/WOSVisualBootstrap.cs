@@ -36,7 +36,8 @@ namespace KillerGame
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.20f, 0.17f, 0.14f);
 
-            foreach (var light in FindObjectsOfType<Light>())
+            // Include inactive lights in scene setup.
+            foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Include))
             {
                 if (light.type == LightType.Directional)
                 {
@@ -55,7 +56,7 @@ namespace KillerGame
 
         void ApplyCamera()
         {
-            var cam = Camera.main;
+            var cam = Object.FindAnyObjectByType<Camera>();
             if (cam == null) return;
 
             cam.transform.position = new Vector3(0f, 23f, -33f);
@@ -70,29 +71,20 @@ namespace KillerGame
             var city = GameObject.Find("City3D");
             if (city == null) return;
 
-            var core = city.transform.Find("FurnaceCoreGlow");
-            if (core == null)
-            {
-                var go = new GameObject("FurnaceCoreGlow");
-                go.transform.SetParent(city.transform, false);
-                go.transform.localPosition = new Vector3(0f, 3.5f, 0f);
-                core = go.transform;
-            }
-
-            var pl = core.GetComponent<Light>() ?? core.gameObject.AddComponent<Light>();
-            pl.type = LightType.Point;
-            pl.color = new Color(1f, 0.42f, 0.06f);
-            pl.intensity = 9f;
-            pl.range = 30f;
-
-            // Warm bounce lights around the city base
-            EnsureFireLight(city.transform, "FireGlowL", new Vector3(-10f, 1.5f, 4f), 4f);
-            EnsureFireLight(city.transform, "FireGlowR", new Vector3(10f, 1.5f, 4f), 4f);
+            EnsureFireLight(city.transform, "FurnaceCoreGlow", new Vector3(0f, 3.5f, 0f), 9f, 30f);
+            EnsureFireLight(city.transform, "FireGlowL", new Vector3(-10f, 1.5f, 4f), 4f, 16f);
+            EnsureFireLight(city.transform, "FireGlowR", new Vector3(10f, 1.5f, 4f), 4f, 16f);
         }
 
-        static void EnsureFireLight(Transform parent, string name, Vector3 localPos, float intensity)
+        static void EnsureFireLight(Transform parent, string name, Vector3 localPos, float intensity, float range)
         {
             var t = parent.Find(name);
+            if (t != null && t.GetComponent<Light>() == null)
+            {
+                Object.Destroy(t.gameObject);
+                t = null;
+            }
+
             if (t == null)
             {
                 var go = new GameObject(name);
@@ -101,11 +93,14 @@ namespace KillerGame
                 t = go.transform;
             }
 
-            var l = t.GetComponent<Light>() ?? t.gameObject.AddComponent<Light>();
+            var l = t.gameObject.GetComponent<Light>();
+            if (l == null)
+                l = t.gameObject.AddComponent<Light>();
+
             l.type = LightType.Point;
             l.color = new Color(1f, 0.48f, 0.08f);
             l.intensity = intensity;
-            l.range = 16f;
+            l.range = range;
         }
 
         void ApplySnow()
@@ -116,18 +111,14 @@ namespace KillerGame
             var ps = snow.GetComponent<ParticleSystem>();
             if (ps == null) return;
 
-            var main = ps.main;
-            main.startLifetime = 9f;
-            main.startSpeed = 1.1f;
-            main.startSize = 0.07f;
-            main.maxParticles = 900;
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 1f, 1f, 0.75f));
-
             var emission = ps.emission;
             emission.rateOverTime = 140f;
 
-            var shape = ps.shape;
-            shape.scale = new Vector3(70f, 1f, 70f);
+            var main = ps.main;
+            main.maxParticles = 900;
+
+            var vol = ps.velocityOverLifetime;
+            vol.enabled = false;
         }
 
         void ApplyPanels()
