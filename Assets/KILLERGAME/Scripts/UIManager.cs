@@ -106,6 +106,9 @@ namespace KillerGame
             if (FindObjectOfType<WOSVisualBootstrap>() == null)
                 new GameObject("WOSVisualBootstrap").AddComponent<WOSVisualBootstrap>();
 
+            if (FindObjectOfType<WildBrawlUI>() == null)
+                new GameObject("WildBrawlUI").AddComponent<WildBrawlUI>();
+
             _gm = KillerGameManager.Instance;
             _gm.OnStateChanged.AddListener(Refresh);
             _gm.OnEvent.AddListener(ShowEvent);

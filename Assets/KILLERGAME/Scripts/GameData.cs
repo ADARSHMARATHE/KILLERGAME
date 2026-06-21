@@ -52,6 +52,17 @@ namespace KillerGame
     }
 
     [Serializable]
+    public class WildBrawlState
+    {
+        public bool   active         = false;
+        public int    enemyPower     = 0;
+        public string enemyName      = "";
+        public int    roundsWon      = 0;
+        public float  timeRemaining  = 0f;
+        public string lastResult     = "";
+    }
+
+    [Serializable]
     public class GameState
     {
         public int   day    = 1;
@@ -95,6 +106,8 @@ namespace KillerGame
         };
 
         public List<string> notifications = new List<string>();
+
+        public WildBrawlState wildBrawl = new WildBrawlState();
 
         public ResourceState GetResource(string key)
         {

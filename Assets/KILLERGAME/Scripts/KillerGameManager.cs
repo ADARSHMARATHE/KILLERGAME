@@ -13,6 +13,11 @@ namespace KillerGame
 
         public UnityEvent OnStateChanged = new UnityEvent();
         public UnityEvent<string> OnEvent = new UnityEvent<string>();
+        public UnityEvent OnWildBrawlStarted = new UnityEvent();
+
+        static readonly string[] BrawlEnemyNames = {
+            "Frost Raiders", "Ice Bandits", "Snow Marauders", "Blizzard Wolves", "Frozen Legion"
+        };
 
         // How many in-game seconds per real second (speed multiplier)
         [SerializeField] float gameSpeed = 1f;
@@ -128,6 +133,14 @@ namespace KillerGame
                 }
             }
 
+            // ---- Wild Brawl timer ----
+            if (State.wildBrawl.active)
+            {
+                State.wildBrawl.timeRemaining -= dt;
+                if (State.wildBrawl.timeRemaining <= 0f)
+                    ExpireWildBrawl();
+            }
+
             // ---- Day cycle ----
             _dayTimer += dt;
             if (_dayTimer >= DAY_DURATION)
@@ -135,6 +148,7 @@ namespace KillerGame
                 _dayTimer = 0f;
                 State.day++;
                 if (State.day % 5 == 0) MaybeTriggerEvent();
+                if (State.day % 7 == 0 && Random.value < 0.30f) TryStartWildBrawl();
             }
 
             OnStateChanged.Invoke();
@@ -294,12 +308,137 @@ namespace KillerGame
             OnStateChanged.Invoke();
         }
 
+        // ---- Wild Brawl ----
+
+        public int CalcTroopPower()
+        {
+            int total = 0;
+            foreach (var troop in State.troops)
+            {
+                if (!Defs.Troops.TryGetValue(troop.troopKey, out var def)) continue;
+                total += troop.count * def.power;
+            }
+            // Commander hero adds 5% per level
+            var cmd = State.GetHero("commander");
+            if (cmd != null && cmd.level > 0)
+                total = Mathf.RoundToInt(total * (1f + cmd.level * 0.05f));
+            return total;
+        }
+
+        public WildBrawlState GetWildBrawlState() => State.wildBrawl;
+
+        void TryStartWildBrawl()
+        {
+            if (State.wildBrawl.active || State.gameOver) return;
+            StartWildBrawl();
+        }
+
+        public void StartWildBrawl()
+        {
+            int playerPower = Mathf.Max(CalcTroopPower(), 15);
+            float scale = Random.Range(0.8f, 1.3f) + State.day * 0.02f;
+            int enemyPower = Mathf.Max(10, Mathf.RoundToInt(playerPower * scale));
+
+            State.wildBrawl.active        = true;
+            State.wildBrawl.enemyPower    = enemyPower;
+            State.wildBrawl.enemyName     = BrawlEnemyNames[Random.Range(0, BrawlEnemyNames.Length)];
+            State.wildBrawl.timeRemaining = 60f;
+            State.wildBrawl.lastResult    = "";
+
+            State.PushNotif($"WILD BRAWL: {State.wildBrawl.enemyName} challenge your city!");
+            OnWildBrawlStarted.Invoke();
+            OnStateChanged.Invoke();
+        }
+
+        public string FightWildBrawl()
+        {
+            if (!State.wildBrawl.active) return "No active brawl.";
+
+            int playerPower = CalcTroopPower();
+            if (playerPower <= 0)
+            {
+                State.PushNotif("You have no troops to fight!");
+                EndWildBrawl();
+                return "You have no troops! Retreat before it's too late.";
+            }
+
+            float playerRoll = playerPower * Random.Range(0.85f, 1.15f);
+            float enemyRoll  = State.wildBrawl.enemyPower * Random.Range(0.85f, 1.15f);
+            bool won = playerRoll >= enemyRoll;
+
+            string result;
+            if (won)
+            {
+                State.wildBrawl.roundsWon++;
+                int goldReward = Random.Range(50, 151) + State.day * 2;
+                int foodReward = Random.Range(80, 200);
+                State.GetResource("gold").amount = Mathf.Min(State.GetResource("gold").cap,
+                    State.GetResource("gold").amount + goldReward);
+                State.GetResource("food").amount = Mathf.Min(State.GetResource("food").cap,
+                    State.GetResource("food").amount + foodReward);
+
+                result = $"VICTORY!\n+{goldReward} Gold, +{foodReward} Food";
+                if (Random.value < 0.25f)
+                {
+                    State.GetTroop("infantry").count++;
+                    result += "\n+1 Infantry joins your ranks!";
+                }
+                State.PushNotif($"Wild Brawl WON vs {State.wildBrawl.enemyName}! +{goldReward} gold.");
+            }
+            else
+            {
+                ApplyBrawlCasualties();
+                int woodLoss = Random.Range(30, 80);
+                int coalLoss = Random.Range(20, 50);
+                State.GetResource("wood").amount = Mathf.Max(0, State.GetResource("wood").amount - woodLoss);
+                State.GetResource("coal").amount = Mathf.Max(0, State.GetResource("coal").amount - coalLoss);
+                result = $"DEFEAT!\nLost troops and {woodLoss} wood, {coalLoss} coal.";
+                State.PushNotif($"Wild Brawl LOST vs {State.wildBrawl.enemyName}. Troops fell in battle.");
+            }
+
+            State.wildBrawl.lastResult = result;
+            EndWildBrawl();
+            return result;
+        }
+
+        void ApplyBrawlCasualties()
+        {
+            float lossRatio = Random.Range(0.15f, 0.35f);
+            foreach (var troop in State.troops)
+            {
+                if (troop.count <= 0) continue;
+                int lost = Mathf.Max(1, Mathf.RoundToInt(troop.count * lossRatio));
+                troop.count = Mathf.Max(0, troop.count - lost);
+            }
+        }
+
+        public void SkipWildBrawl()
+        {
+            if (!State.wildBrawl.active) return;
+            State.GetResource("food").amount = Mathf.Max(0, State.GetResource("food").amount - 25);
+            State.PushNotif("Skipped Wild Brawl. Morale drops (-25 food rations).");
+            EndWildBrawl();
+        }
+
+        void ExpireWildBrawl()
+        {
+            State.PushNotif("Wild Brawl expired — the enemy left.");
+            EndWildBrawl();
+        }
+
+        void EndWildBrawl()
+        {
+            State.wildBrawl.active        = false;
+            State.wildBrawl.timeRemaining = 0f;
+            OnStateChanged.Invoke();
+        }
+
         // ---- Random Events ----
         void MaybeTriggerEvent()
         {
             if (Random.value > 0.45f) return;
 
-            int roll = Random.Range(0, 7);
+            int roll = Random.Range(0, 8);
             string msg = "";
             switch (roll)
             {
@@ -333,6 +472,9 @@ namespace KillerGame
                     State.GetResource("iron").amount = Mathf.Min(State.GetResource("iron").cap, State.GetResource("iron").amount + 150);
                     msg = "BONUS: Iron deposit! +150 iron.";
                     break;
+                case 7:
+                    TryStartWildBrawl();
+                    return;
             }
 
             if (!string.IsNullOrEmpty(msg))
