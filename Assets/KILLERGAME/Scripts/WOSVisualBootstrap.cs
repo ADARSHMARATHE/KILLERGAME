@@ -136,6 +136,43 @@ namespace KillerGame
             StylePanel("BasePanel", PanelSheet, 0.36f, 0.90f);
             StylePanel("TroopsPanel", PanelSheet, 0.36f, 0.90f);
             StylePanel("HeroesPanel", PanelSheet, 0.36f, 0.90f);
+            StyleFurnaceWidgets();
+        }
+
+        void StyleFurnaceWidgets()
+        {
+            var temp = GameObject.Find("TempBig");
+            if (temp != null)
+            {
+                var t = temp.GetComponent<TextMeshProUGUI>();
+                if (t != null)
+                {
+                    t.fontSize = 54;
+                    t.fontStyle = FontStyles.Bold;
+                    t.color = new Color(1f, 0.62f, 0.12f);
+                }
+            }
+
+            var fire = GameObject.Find("Emoji");
+            if (fire != null)
+            {
+                var t = fire.GetComponent<TextMeshProUGUI>();
+                if (t != null)
+                {
+                    t.text = "FIRE";
+                    t.fontSize = 30;
+                    t.fontStyle = FontStyles.Bold;
+                    t.color = new Color(1f, 0.52f, 0.08f);
+                }
+            }
+
+            var fill = GameObject.Find("Fill");
+            if (fill != null)
+            {
+                var img = fill.GetComponent<Image>();
+                if (img != null)
+                    img.color = new Color(0.95f, 0.45f, 0.08f, 1f);
+            }
         }
 
         static void StylePanel(string name, Color bg, float anchorMinY, float anchorMaxY)
@@ -226,11 +263,8 @@ namespace KillerGame
                     tmp.color = GoldText;
                 else if (n.Contains("level") || n.Contains("lvl"))
                     tmp.color = BlueLevel;
-                else if (n.Contains("cost") || n.Contains("desc") == false && n.Contains("status") == false)
-                {
-                    if (n.Contains("cost") || tmp.text.Contains("Food") || tmp.text.Contains("Wood") || tmp.text.Contains("Coal") || tmp.text.Contains("Iron") || tmp.text.Contains("Gold"))
-                        tmp.color = AmberCost;
-                }
+                else if (n.Contains("cost") || n.Contains("upgcost"))
+                    tmp.color = AmberCost;
             }
 
             FixIconLayout(card.transform.Find("IconImg") ?? card.transform.Find("Icon"));
