@@ -23,6 +23,11 @@ namespace KillerGame
         static readonly Color BtnOrangeD = new Color(0.62f, 0.32f, 0.04f);
         static readonly Color AmberCost  = new Color(0.96f, 0.65f, 0.14f);
 
+        static readonly HashSet<string> FurnaceDockVisible = new HashSet<string>
+        {
+            "FuelBarBG", "FuelBtns", "F10", "F25", "F50", "UpgradeBtn", "Fill"
+        };
+
         public static void Apply(Canvas canvas)
         {
             if (canvas == null) return;
@@ -30,8 +35,14 @@ namespace KillerGame
             StyleTabBar();
             StylePanels();
             LayoutFurnaceContent();
+            EnsureCenterTempGauge(canvas.transform);
             StyleBuildScroll();
             StyleAllButtons(canvas.transform);
+
+            var gauge = canvas.transform.Find("WOS_TempGauge");
+            if (gauge != null) gauge.SetAsLastSibling();
+            var storm = canvas.transform.Find("WOS_StormBanner");
+            if (storm != null) storm.SetAsLastSibling();
         }
 
         static void StyleHud()
@@ -54,20 +65,8 @@ namespace KillerGame
 
             EnsureAvatar(hud.transform);
             StyleDayBadge();
-            StyleTmp("Temp", new Color(1f, 0.62f, 0.18f), 24, FontStyles.Bold);
-
             var tempGo = GameObject.Find("Temp");
-            if (tempGo != null)
-            {
-                var trt = tempGo.GetComponent<RectTransform>();
-                if (trt != null)
-                {
-                    trt.anchorMin = new Vector2(1f, 0.5f);
-                    trt.anchorMax = new Vector2(1f, 0.5f);
-                    trt.pivot = new Vector2(1f, 0.5f);
-                    trt.anchoredPosition = new Vector2(-12f, 0f);
-                }
-            }
+            if (tempGo != null) tempGo.SetActive(false);
 
             var res = GameObject.Find("Res");
             if (res != null)
@@ -139,6 +138,105 @@ namespace KillerGame
                 drt.anchoredPosition = new Vector2(88f, 0f);
                 drt.sizeDelta = new Vector2(120f, 36f);
             }
+        }
+
+        /// <summary>WOS-style large blue temperature ring centered at top of screen.</summary>
+        static void EnsureCenterTempGauge(Transform canvas)
+        {
+            var gaugeT = canvas.Find("WOS_TempGauge");
+            GameObject gauge;
+            if (gaugeT == null)
+            {
+                gauge = new GameObject("WOS_TempGauge");
+                gauge.transform.SetParent(canvas, false);
+                var rt = gauge.AddComponent<RectTransform>();
+                rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+                rt.pivot = new Vector2(0.5f, 1f);
+                rt.anchoredPosition = new Vector2(0f, -8f);
+                rt.sizeDelta = new Vector2(120f, 120f);
+
+                CreateRingImage(gauge.transform, "Outer", 118f, new Color(0.22f, 0.48f, 0.82f, 0.95f));
+                CreateRingImage(gauge.transform, "Mid", 106f, new Color(0.08f, 0.14f, 0.26f, 0.98f));
+                CreateRingImage(gauge.transform, "Inner", 94f, new Color(0.12f, 0.28f, 0.52f, 0.92f));
+
+                var flake = new GameObject("Snowflake");
+                flake.transform.SetParent(gauge.transform, false);
+                var frt = flake.AddComponent<RectTransform>();
+                frt.anchorMin = frt.anchorMax = new Vector2(0.5f, 0.62f);
+                frt.sizeDelta = new Vector2(28f, 28f);
+                var ftmp = flake.AddComponent<TextMeshProUGUI>();
+                ftmp.text = "*";
+                ftmp.fontSize = 26;
+                ftmp.color = new Color(0.75f, 0.92f, 1f);
+                ftmp.alignment = TextAlignmentOptions.Center;
+                ftmp.raycastTarget = false;
+            }
+            else
+            {
+                gauge = gaugeT.gameObject;
+            }
+
+            var tempBig = GameObject.Find("TempBig");
+            if (tempBig != null)
+            {
+                tempBig.SetActive(true);
+                tempBig.transform.SetParent(gauge.transform, false);
+                var trt = tempBig.GetComponent<RectTransform>();
+                trt.anchorMin = trt.anchorMax = new Vector2(0.5f, 0.38f);
+                trt.pivot = new Vector2(0.5f, 0.5f);
+                trt.sizeDelta = new Vector2(110f, 44f);
+                trt.anchoredPosition = Vector2.zero;
+                StyleTmpObject(tempBig, Color.white, 26, FontStyles.Bold);
+            }
+            else
+            {
+                var tempSrc = GameObject.Find("Temp");
+                if (tempSrc != null)
+                {
+                    tempSrc.SetActive(true);
+                    tempSrc.transform.SetParent(gauge.transform, false);
+                    var trt = tempSrc.GetComponent<RectTransform>();
+                    trt.anchorMin = trt.anchorMax = new Vector2(0.5f, 0.38f);
+                    trt.pivot = new Vector2(0.5f, 0.5f);
+                    trt.sizeDelta = new Vector2(110f, 44f);
+                    trt.anchoredPosition = Vector2.zero;
+                    StyleTmpObject(tempSrc, Color.white, 26, FontStyles.Bold);
+                }
+            }
+
+            var stormT = canvas.Find("WOS_StormBanner");
+            if (stormT == null)
+            {
+                var storm = new GameObject("WOS_StormBanner");
+                storm.transform.SetParent(canvas, false);
+                var srt = storm.AddComponent<RectTransform>();
+                srt.anchorMin = srt.anchorMax = new Vector2(0.5f, 1f);
+                srt.pivot = new Vector2(0.5f, 1f);
+                srt.anchoredPosition = new Vector2(0f, -132f);
+                srt.sizeDelta = new Vector2(340f, 36f);
+                var sbg = storm.AddComponent<Image>();
+                sbg.color = new Color(0.05f, 0.08f, 0.14f, 0.72f);
+                sbg.raycastTarget = false;
+
+                var labelGo = new GameObject("Label");
+                labelGo.transform.SetParent(storm.transform, false);
+                var lrt = labelGo.AddComponent<RectTransform>();
+                Stretch(lrt);
+                var stmp = labelGo.AddComponent<TextMeshProUGUI>();
+                stmp.text = "A storm is coming...";
+                stmp.fontSize = 16;
+                stmp.fontStyle = FontStyles.Italic;
+                stmp.color = new Color(0.65f, 0.78f, 0.95f);
+                stmp.alignment = TextAlignmentOptions.Center;
+                stmp.raycastTarget = false;
+            }
+        }
+
+        static void Stretch(RectTransform rt)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
         }
 
         static void StyleResourceSlot(string iconName, string textName, Color rim)
@@ -377,10 +475,125 @@ namespace KillerGame
 
         static void StylePanels()
         {
-            StyleSheet("FurnacePanel", 0.115f, 0.40f, true);
+            StyleWOSCityFurnaceDock();
             StyleSheet("BasePanel", 0.12f, 0.88f, false);
             StyleSheet("TroopsPanel", 0.12f, 0.88f, false);
             StyleSheet("HeroesPanel", 0.12f, 0.88f, false);
+        }
+
+        /// <summary>WOS home screen: full city visible, thin fuel dock above tab bar.</summary>
+        static void StyleWOSCityFurnaceDock()
+        {
+            var panel = GameObject.Find("FurnacePanel");
+            if (panel == null) return;
+
+            var scroll = panel.GetComponent<ScrollRect>();
+            if (scroll != null)
+            {
+                scroll.enabled = false;
+                scroll.vertical = false;
+                scroll.horizontal = false;
+            }
+
+            var rt = panel.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.anchorMin = new Vector2(0f, 0.115f);
+                rt.anchorMax = new Vector2(1f, 0.205f);
+                rt.offsetMin = rt.offsetMax = Vector2.zero;
+            }
+
+            var img = panel.GetComponent<Image>();
+            if (img != null) img.color = new Color(0.03f, 0.05f, 0.10f, 0.55f);
+
+            RemoveChild(panel.transform, "WOS_Frame");
+            EnsureBorder(panel.transform, "WOS_FrostTop", true, new Color(Gold.r, Gold.g, Gold.b, 0.45f), 2f);
+
+            var viewport = panel.transform.Find("Viewport");
+            if (viewport != null)
+            {
+                var vrt = viewport.GetComponent<RectTransform>();
+                if (vrt != null)
+                {
+                    vrt.anchorMin = Vector2.zero;
+                    vrt.anchorMax = Vector2.one;
+                    vrt.offsetMin = vrt.offsetMax = Vector2.zero;
+                }
+            }
+
+            var fcontent = GameObject.Find("FContent");
+            if (fcontent == null) return;
+
+            var fcrt = fcontent.GetComponent<RectTransform>();
+            if (fcrt != null)
+            {
+                fcrt.anchorMin = Vector2.zero;
+                fcrt.anchorMax = Vector2.one;
+                fcrt.offsetMin = fcrt.offsetMax = Vector2.zero;
+            }
+
+            var csf = fcontent.GetComponent<ContentSizeFitter>();
+            if (csf != null) csf.enabled = false;
+
+            foreach (var vlg in fcontent.GetComponents<VerticalLayoutGroup>())
+                UnityEngine.Object.Destroy(vlg);
+
+            var hlg = fcontent.GetComponent<HorizontalLayoutGroup>() ?? fcontent.AddComponent<HorizontalLayoutGroup>();
+            hlg.padding = new RectOffset(8, 8, 4, 4);
+            hlg.spacing = 6;
+            hlg.childAlignment = TextAnchor.MiddleCenter;
+            hlg.childControlWidth = hlg.childControlHeight = true;
+            hlg.childForceExpandWidth = false;
+            hlg.childForceExpandHeight = true;
+
+            foreach (Transform child in fcontent.transform)
+            {
+                bool keep = FurnaceDockVisible.Contains(child.name);
+                child.gameObject.SetActive(keep);
+            }
+
+            var stats = GameObject.Find("Stats");
+            if (stats != null) stats.SetActive(false);
+
+            foreach (var n in new[] { "SubLbl", "TempBig", "Emoji", "FuelPct", "FuelLabel", "Burn Rate", "Max Temp", "Furnace Lvl", "UpgCost" })
+            {
+                var o = GameObject.Find(n);
+                if (o != null) o.SetActive(false);
+            }
+
+            SetRowHeight("FuelBarBG", 36);
+            var fuelBar = GameObject.Find("FuelBarBG");
+            if (fuelBar != null)
+            {
+                var le = fuelBar.GetComponent<LayoutElement>() ?? fuelBar.AddComponent<LayoutElement>();
+                le.preferredWidth = 220;
+                le.flexibleWidth = 1;
+            }
+            StyleFuelBar();
+
+            var fuelBtns = GameObject.Find("FuelBtns");
+            if (fuelBtns != null)
+            {
+                var fle = fuelBtns.GetComponent<LayoutElement>() ?? fuelBtns.AddComponent<LayoutElement>();
+                fle.preferredWidth = 280;
+                var fbHlg = fuelBtns.GetComponent<HorizontalLayoutGroup>() ?? fuelBtns.AddComponent<HorizontalLayoutGroup>();
+                fbHlg.spacing = 4;
+                fbHlg.childAlignment = TextAnchor.MiddleCenter;
+            }
+
+            StyleFuelButton("F10", "+10%");
+            StyleFuelButton("F25", "+25%");
+            StyleFuelButton("F50", "+50%");
+
+            var upgrade = GameObject.Find("UpgradeBtn");
+            if (upgrade != null)
+            {
+                var ule = upgrade.GetComponent<LayoutElement>() ?? upgrade.AddComponent<LayoutElement>();
+                ule.preferredWidth = 140;
+                StyleUpgradeButton("UpgradeBtn");
+                var ulbl = upgrade.GetComponentInChildren<TextMeshProUGUI>();
+                if (ulbl != null) ulbl.text = "Upgrade";
+            }
         }
 
         static void StyleSheet(string name, float minY, float maxY, bool compact)
@@ -418,61 +631,7 @@ namespace KillerGame
 
         static void LayoutFurnaceContent()
         {
-            var fcontent = GameObject.Find("FContent");
-            if (fcontent == null) return;
-
-            var stats = GameObject.Find("Stats");
-            if (stats != null && stats.transform.parent == fcontent.transform)
-                stats.SetActive(false);
-
-            var vlg = fcontent.GetComponent<VerticalLayoutGroup>() ?? fcontent.AddComponent<VerticalLayoutGroup>();
-            vlg.padding = new RectOffset(14, 14, 8, 10);
-            vlg.spacing = 6;
-            vlg.childAlignment = TextAnchor.UpperCenter;
-            vlg.childControlWidth = true;
-            vlg.childControlHeight = true;
-            vlg.childForceExpandWidth = true;
-            vlg.childForceExpandHeight = false;
-
-            var csf = fcontent.GetComponent<ContentSizeFitter>();
-            if (csf != null) csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            SetRowHeight("Emoji", 0);
-            var emoji = GameObject.Find("Emoji");
-            if (emoji != null) emoji.SetActive(false);
-
-            EnsureFurnaceTitle(fcontent.transform);
-            EnsureFurnaceRing(fcontent.transform);
-
-            foreach (var n in new[] { "BurnRate", "MaxTemp", "Furnace Lvl", "FuelLabel", "fuelPctText" })
-            {
-                var o = GameObject.Find(n);
-                if (o != null) o.SetActive(false);
-            }
-
-            SetRowHeight("FuelBarBG", 28);
-            StyleFuelBar();
-
-            var fuelBtns = GameObject.Find("FuelBtns");
-            if (fuelBtns != null)
-            {
-                SetRowHeight("FuelBtns", 60);
-                var hlg = fuelBtns.GetComponent<HorizontalLayoutGroup>() ?? fuelBtns.AddComponent<HorizontalLayoutGroup>();
-                hlg.spacing = 10;
-                hlg.childAlignment = TextAnchor.MiddleCenter;
-                hlg.childControlWidth = hlg.childControlHeight = true;
-                hlg.childForceExpandWidth = true;
-            }
-
-            StyleFuelButton("F10", "+10%");
-            StyleFuelButton("F25", "+25%");
-            StyleFuelButton("F50", "+50%");
-
-            SetRowHeight("UpgradeBtn", 56);
-            StyleUpgradeButton("UpgradeBtn");
-
-            SetRowHeight("UpgCost", 20);
-            StyleTmp("UpgCost", AmberCost, 16, FontStyles.Bold);
+            // Furnace controls laid out in StyleWOSCityFurnaceDock (horizontal mini dock).
         }
 
         static void EnsureFurnaceTitle(Transform parent)

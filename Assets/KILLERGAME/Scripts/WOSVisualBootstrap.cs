@@ -306,11 +306,15 @@ namespace KillerGame
         {
             var snow = GameObject.Find("SnowParticles3D");
             if (snow == null) return;
-            snow.SetActive(true);
+
             var ps = snow.GetComponent<ParticleSystem>();
             if (ps == null) return;
 
+            snow.SetActive(false);
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = ps.main;
+            main.playOnAwake = false;
 
             var velocity = ps.velocityOverLifetime;
             velocity.enabled = false;
@@ -318,7 +322,6 @@ namespace KillerGame
             velocity.y = new ParticleSystem.MinMaxCurve(0f);
             velocity.z = new ParticleSystem.MinMaxCurve(0f);
 
-            var main = ps.main;
             main.startLifetime = 9f;
             main.startSpeed = 1.2f;
             main.startSize = 0.07f;
@@ -338,6 +341,7 @@ namespace KillerGame
                     renderer.sharedMaterial = mat;
             }
 
+            snow.SetActive(true);
             ps.Play();
         }
 

@@ -200,69 +200,59 @@ namespace KillerGame
             Material glow = MakeForgeGlowMaterial(glowMat);
             Material snow = snowMat ?? stoneMat;
 
-            // Wide stone foundation + stepped tiers (WOS industrial base)
+            // Stepped pyramid tiers (WOS reference — wide base narrowing upward)
             AddPart(tower.transform, "Foundation", PrimitiveType.Cube,
-                new Vector3(0f, 0.55f, 0f), new Vector3(14f, 1.1f, 14f), dark);
+                new Vector3(0f, 0.55f, 0f), new Vector3(16f, 1.1f, 16f), dark);
             AddPart(tower.transform, "Tier1", PrimitiveType.Cube,
-                new Vector3(0f, 2f, 0f), new Vector3(12f, 1.8f, 12f), stone);
+                new Vector3(0f, 2.2f, 0f), new Vector3(14f, 2.2f, 14f), stone);
             AddPart(tower.transform, "Tier2", PrimitiveType.Cube,
-                new Vector3(0f, 4.2f, 0f), new Vector3(10.5f, 2.2f, 10.5f), stone);
+                new Vector3(0f, 4.8f, 0f), new Vector3(12f, 2.4f, 12f), stone);
+            AddPart(tower.transform, "Tier3", PrimitiveType.Cube,
+                new Vector3(0f, 7.4f, 0f), new Vector3(10f, 2.2f, 10f), dark);
+            AddPart(tower.transform, "Tier4", PrimitiveType.Cube,
+                new Vector3(0f, 9.8f, 0f), new Vector3(8.5f, 2f, 8.5f), stone);
+            AddPart(tower.transform, "Tier5", PrimitiveType.Cube,
+                new Vector3(0f, 11.9f, 0f), new Vector3(7f, 1.8f, 7f), dark);
 
-            // Main furnace chamber block
-            AddPart(tower.transform, "Chamber", PrimitiveType.Cube,
-                new Vector3(0f, 8.5f, 0f), new Vector3(9.5f, 5.5f, 9.5f), dark);
-            AddPart(tower.transform, "UpperHousing", PrimitiveType.Cube,
-                new Vector3(0f, 13.5f, 0f), new Vector3(7.5f, 3f, 7.5f), stone);
-
-            // Tall chimney / smokestack
-            AddPart(tower.transform, "Chimney", PrimitiveType.Cube,
-                new Vector3(0f, 17.5f, 0f), new Vector3(4.2f, 5.5f, 4.2f), dark);
-            AddPart(tower.transform, "ChimneyRim", PrimitiveType.Cube,
-                new Vector3(0f, 20.8f, 0f), new Vector3(5f, 0.6f, 5f), dark);
+            // Summit deck + top brazier fire (visible from isometric camera)
+            AddPart(tower.transform, "SummitDeck", PrimitiveType.Cube,
+                new Vector3(0f, 13.6f, 0f), new Vector3(6.5f, 0.6f, 6.5f), stone);
+            AddPart(tower.transform, "SummitRing", PrimitiveType.Cube,
+                new Vector3(0f, 14.2f, 0f), new Vector3(5.5f, 0.35f, 5.5f), dark);
+            AddPart(tower.transform, "SummitFire", PrimitiveType.Cube,
+                new Vector3(0f, 15.4f, 0f), new Vector3(4f, 1.8f, 4f), glow);
+            AddPart(tower.transform, "SummitFlame", PrimitiveType.Cube,
+                new Vector3(0f, 17.2f, 0f), new Vector3(2.8f, 2.2f, 2.8f), glow);
+            AddPart(tower.transform, "SummitCore", PrimitiveType.Cube,
+                new Vector3(0f, 18.8f, 0f), new Vector3(1.6f, 1.6f, 1.6f), glow);
             AddPart(tower.transform, "SnowCap", PrimitiveType.Cube,
-                new Vector3(0f, 21.6f, 0f), new Vector3(5.5f, 0.9f, 5.5f), snow);
+                new Vector3(0f, 13.95f, 0f), new Vector3(7f, 0.25f, 7f), snow);
 
-            // Metal bands around chamber
+            // Metal bands
             AddPart(tower.transform, "BandLower", PrimitiveType.Cube,
-                new Vector3(0f, 6.2f, 0f), new Vector3(10.6f, 0.45f, 10.6f), dark);
+                new Vector3(0f, 3.2f, 0f), new Vector3(14.8f, 0.35f, 14.8f), dark);
             AddPart(tower.transform, "BandMid", PrimitiveType.Cube,
-                new Vector3(0f, 10.8f, 0f), new Vector3(9.7f, 0.4f, 9.7f), dark);
+                new Vector3(0f, 8.5f, 0f), new Vector3(10.8f, 0.3f, 10.8f), dark);
 
-            // Front forge mouth — faces +Z toward camera
-            AddPart(tower.transform, "ForgeFrame", PrimitiveType.Cube,
-                new Vector3(0f, 4.8f, 5.15f), new Vector3(4.6f, 4f, 0.5f), dark);
-            AddPart(tower.transform, "ForgeMouth", PrimitiveType.Cube,
-                new Vector3(0f, 4.8f, 5.35f), new Vector3(3.6f, 3.2f, 0.35f), glow);
-            AddPart(tower.transform, "ForgeCore", PrimitiveType.Cube,
-                new Vector3(0f, 4.8f, 5.5f), new Vector3(2.6f, 2.4f, 0.2f), glow);
-
-            // Glowing vent slits around chamber mid-line
-            const float ventY = 9.2f;
-            const float ventHalf = 4.85f;
+            // Red glowing vents at base (WOS warm ring at bottom)
+            const float ventY = 1.4f;
+            const float ventR = 7.8f;
             AddPart(tower.transform, "VentFront", PrimitiveType.Cube,
-                new Vector3(0f, ventY, ventHalf), new Vector3(5.5f, 0.55f, 0.18f), glow);
+                new Vector3(0f, ventY, ventR), new Vector3(6f, 0.45f, 0.2f), glow);
             AddPart(tower.transform, "VentBack", PrimitiveType.Cube,
-                new Vector3(0f, ventY, -ventHalf), new Vector3(5.5f, 0.55f, 0.18f), glow);
+                new Vector3(0f, ventY, -ventR), new Vector3(6f, 0.45f, 0.2f), glow);
             AddPart(tower.transform, "VentLeft", PrimitiveType.Cube,
-                new Vector3(-ventHalf, ventY, 0f), new Vector3(0.18f, 0.55f, 5.5f), glow);
+                new Vector3(-ventR, ventY, 0f), new Vector3(0.2f, 0.45f, 6f), glow);
             AddPart(tower.transform, "VentRight", PrimitiveType.Cube,
-                new Vector3(ventHalf, ventY, 0f), new Vector3(0.18f, 0.55f, 5.5f), glow);
+                new Vector3(ventR, ventY, 0f), new Vector3(0.2f, 0.45f, 6f), glow);
 
-            // Side exhaust pipes
-            AddPart(tower.transform, "PipeL", PrimitiveType.Cylinder,
-                new Vector3(-5.8f, 11f, 1.5f), new Vector3(1.4f, 3.5f, 1.4f), dark);
-            AddPart(tower.transform, "PipeR", PrimitiveType.Cylinder,
-                new Vector3(5.8f, 11f, 1.5f), new Vector3(1.4f, 3.5f, 1.4f), dark);
-
-            // Front coal platform / ramp
+            // Front coal platform
             AddPart(tower.transform, "CoalPlatform", PrimitiveType.Cube,
-                new Vector3(0f, 0.25f, 6.5f), new Vector3(5.5f, 0.45f, 2.5f), stone);
-            AddPart(tower.transform, "CoalPile", PrimitiveType.Cube,
-                new Vector3(0f, 0.75f, 6.8f), new Vector3(3f, 0.8f, 1.8f), dark);
+                new Vector3(0f, 0.25f, 8f), new Vector3(5.5f, 0.45f, 2.5f), stone);
 
-            AddFurnaceLight(tower.transform, "ForgeLight", new Vector3(0f, 4.8f, 7f), 45f, 22f);
-            AddFurnaceLight(tower.transform, "ChamberLight", new Vector3(0f, 9f, 0f), 22f, 28f);
-            AddFurnaceLight(tower.transform, "ChimneyLight", new Vector3(0f, 18f, 0f), 12f, 14f);
+            AddFurnaceLight(tower.transform, "SummitLight", new Vector3(0f, 17f, 0f), 55f, 40f);
+            AddFurnaceLight(tower.transform, "BaseGlow", new Vector3(0f, 1.5f, 0f), 18f, 22f);
+            AddFurnaceLight(tower.transform, "SummitLight2", new Vector3(0f, 19f, 2f), 25f, 18f);
         }
 
         static Material MakeForgeGlowMaterial(Material source)
