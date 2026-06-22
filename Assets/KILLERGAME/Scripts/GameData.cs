@@ -59,7 +59,10 @@ namespace KillerGame
         public string enemyName      = "";
         public int    roundsWon      = 0;
         public float  timeRemaining  = 0f;
+        public float  duration       = 60f;
         public string lastResult     = "";
+        public int    previewGold    = 0;
+        public int    previewFood    = 0;
     }
 
     [Serializable]

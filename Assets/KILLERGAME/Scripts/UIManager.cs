@@ -103,11 +103,16 @@ namespace KillerGame
 
         void Start()
         {
-            if (Object.FindAnyObjectByType<WOSVisualBootstrap>() == null)
-                new GameObject("WOSVisualBootstrap").AddComponent<WOSVisualBootstrap>();
-
             if (Object.FindAnyObjectByType<WildBrawlUI>() == null)
                 new GameObject("WildBrawlUI").AddComponent<WildBrawlUI>();
+
+            ResolveBuildReferences();
+
+            if (furnaceEmoji != null)
+            {
+                furnaceEmoji.gameObject.SetActive(false);
+                furnaceEmoji.text = string.Empty;
+            }
 
             _gm = KillerGameManager.Instance;
             if (_gm == null)
@@ -141,6 +146,23 @@ namespace KillerGame
             // Start on furnace tab
             ShowTab(furnacePanel);
             Refresh();
+        }
+
+        void ResolveBuildReferences()
+        {
+            if (buildingsContainer == null)
+            {
+                var content = GameObject.Find("BContent");
+                if (content != null) buildingsContainer = content.transform;
+            }
+
+            if (buildingCardPrefab == null)
+            {
+#if UNITY_EDITOR
+                buildingCardPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+                    "Assets/KILLERGAME/Prefabs/BuildingCard.prefab");
+#endif
+            }
         }
 
         void ShowTab(GameObject panel)
@@ -242,9 +264,6 @@ namespace KillerGame
         void RefreshFurnace(GameState s)
         {
             var f = s.furnace;
-
-            if (furnaceEmoji)
-                furnaceEmoji.text = f.fuelPct > 30f ? "FIRE" : f.fuelPct > 8f ? "LOW" : "DEAD";
 
             if (furnaceTempText)
             {
@@ -372,7 +391,7 @@ namespace KillerGame
         {
             if (eventModal == null) return;
             eventModal.SetActive(true);
-            if (eventTitle)   eventTitle.text   = "⚡ Event!";
+            if (eventTitle)   eventTitle.text   = "Event!";
             if (eventMessage) eventMessage.text = msg;
         }
 

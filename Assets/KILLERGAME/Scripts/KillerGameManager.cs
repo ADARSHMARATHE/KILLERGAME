@@ -343,11 +343,28 @@ namespace KillerGame
             State.wildBrawl.enemyPower    = enemyPower;
             State.wildBrawl.enemyName     = BrawlEnemyNames[Random.Range(0, BrawlEnemyNames.Length)];
             State.wildBrawl.timeRemaining = 60f;
+            State.wildBrawl.duration      = 60f;
             State.wildBrawl.lastResult    = "";
+            State.wildBrawl.previewGold   = 100 + State.day * 2;
+            State.wildBrawl.previewFood   = 140;
 
             State.PushNotif($"WILD BRAWL: {State.wildBrawl.enemyName} challenge your city!");
             OnWildBrawlStarted.Invoke();
             OnStateChanged.Invoke();
+        }
+
+        /// <summary>Force-start Wild Brawl for testing (Play mode: press B).</summary>
+        public void DebugStartWildBrawl()
+        {
+            if (State.gameOver) return;
+            EndWildBrawl();
+            StartWildBrawl();
+        }
+
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.B))
+                DebugStartWildBrawl();
         }
 
         public string FightWildBrawl()
@@ -372,6 +389,8 @@ namespace KillerGame
                 State.wildBrawl.roundsWon++;
                 int goldReward = Random.Range(50, 151) + State.day * 2;
                 int foodReward = Random.Range(80, 200);
+                State.wildBrawl.previewGold = goldReward;
+                State.wildBrawl.previewFood = foodReward;
                 State.GetResource("gold").amount = Mathf.Min(State.GetResource("gold").cap,
                     State.GetResource("gold").amount + goldReward);
                 State.GetResource("food").amount = Mathf.Min(State.GetResource("food").cap,
